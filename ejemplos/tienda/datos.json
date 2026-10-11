@@ -1,0 +1,263 @@
+{
+ "titulo": "Panel de ventas",
+ "eyebrow": "Tienda online · T4",
+ "fecha": "2026-10-11",
+ "estado": "Cierre de trimestre · 21 días",
+ "lede": "Cómo van las ventas del trimestre por canal y producto, qué objetivos están en riesgo y qué productos necesitan atención. Datos ficticios de ejemplo.",
+ "fuentes": [
+  "Datos ficticios generados para el ejemplo de ArtefactUI"
+ ],
+ "grupos": {
+  "web": "Web",
+  "app": "App",
+  "marketplace": "Marketplace"
+ },
+ "productos": [
+  {
+   "slug": "auriculares-pro",
+   "nombre": "Auriculares Pro",
+   "icono": "audio",
+   "grupo": "web",
+   "ingresos": 17296,
+   "unidades": 219,
+   "objetivo": 22000,
+   "devoluciones": 2.1,
+   "stock": 140,
+   "semanas": [
+    2851,
+    2638,
+    3252,
+    2542,
+    3111,
+    2902
+   ]
+  },
+  {
+   "slug": "reloj-sport",
+   "nombre": "Reloj Sport",
+   "icono": "reloj",
+   "grupo": "app",
+   "ingresos": 14613,
+   "unidades": 185,
+   "objetivo": 14000,
+   "devoluciones": 3.4,
+   "stock": 62,
+   "semanas": [
+    2949,
+    2244,
+    2114,
+    2450,
+    2271,
+    2585
+   ]
+  },
+  {
+   "slug": "altavoz-mini",
+   "nombre": "Altavoz Mini",
+   "icono": "altavoz",
+   "grupo": "marketplace",
+   "ingresos": 10015,
+   "unidades": 53,
+   "objetivo": 12000,
+   "devoluciones": 1.6,
+   "stock": 310,
+   "semanas": [
+    1847,
+    1388,
+    1453,
+    1717,
+    1926,
+    1684
+   ]
+  },
+  {
+   "slug": "teclado-mecanico",
+   "nombre": "Teclado mecánico",
+   "icono": "teclado",
+   "grupo": "web",
+   "ingresos": 7052,
+   "unidades": 28,
+   "objetivo": 8000,
+   "devoluciones": 1.2,
+   "stock": 85,
+   "semanas": [
+    1038,
+    1125,
+    1295,
+    1081,
+    1226,
+    1287
+   ]
+  },
+  {
+   "slug": "raton-ergonomico",
+   "nombre": "Ratón ergonómico",
+   "icono": "raton",
+   "grupo": "web",
+   "ingresos": 4270,
+   "unidades": 17,
+   "objetivo": 6000,
+   "devoluciones": 0.9,
+   "stock": 420,
+   "semanas": [
+    662,
+    807,
+    625,
+    740,
+    756,
+    680
+   ]
+  },
+  {
+   "slug": "monitor-27",
+   "nombre": "Monitor 27\"",
+   "icono": "monitor",
+   "grupo": "marketplace",
+   "ingresos": 13501,
+   "unidades": 71,
+   "objetivo": 15000,
+   "devoluciones": 4.8,
+   "stock": 12,
+   "semanas": [
+    2332,
+    2205,
+    2252,
+    2147,
+    2177,
+    2388
+   ]
+  },
+  {
+   "slug": "tableta-10",
+   "nombre": "Tableta 10\"",
+   "icono": "tableta",
+   "grupo": "app",
+   "ingresos": 11156,
+   "unidades": 45,
+   "objetivo": 10000,
+   "devoluciones": 2.7,
+   "stock": 48,
+   "semanas": [
+    1913,
+    1815,
+    1702,
+    2068,
+    1997,
+    1661
+   ]
+  },
+  {
+   "slug": "camara-accion",
+   "nombre": "Cámara de acción",
+   "icono": "camara",
+   "grupo": "app",
+   "ingresos": 5898,
+   "unidades": 24,
+   "objetivo": 9000,
+   "devoluciones": 5.9,
+   "stock": 7,
+   "semanas": [
+    951,
+    1031,
+    969,
+    1012,
+    1078,
+    857
+   ]
+  }
+ ],
+ "semanas": [
+  [
+   "S36",
+   14543
+  ],
+  [
+   "S37",
+   13253
+  ],
+  [
+   "S38",
+   13662
+  ],
+  [
+   "S39",
+   13757
+  ],
+  [
+   "S40",
+   14542
+  ],
+  [
+   "S41",
+   14044
+  ]
+ ],
+ "pedidos": 1842,
+ "pedidos_prev": 1710,
+ "conversion": 2.9,
+ "conversion_prev": 3.1,
+ "objetivos": [
+  {
+   "nombre": "Ingresos del trimestre",
+   "icono": "euro",
+   "progreso": 72,
+   "estado": "ok",
+   "detalle": "En plazo"
+  },
+  {
+   "nombre": "Nuevos clientes",
+   "icono": "cliente",
+   "progreso": 48,
+   "estado": "warn",
+   "detalle": "Por debajo del ritmo"
+  },
+  {
+   "nombre": "Envío en 24 h",
+   "icono": "envio",
+   "progreso": 91,
+   "estado": "ok",
+   "detalle": "Cumple"
+  },
+  {
+   "nombre": "Integración con el marketplace",
+   "icono": "api",
+   "progreso": 20,
+   "estado": "bad",
+   "detalle": "Bloqueada por la API"
+  }
+ ],
+ "resumen": [
+  "Los ingresos suben un 6 % frente al trimestre anterior, empujados por la app.",
+  "La conversión baja de 3,1 % a 2,9 %: revisar el proceso de pago en web.",
+  "Dos productos se quedan sin stock en menos de una semana: Monitor 27\" y Cámara de acción."
+ ],
+ "guia": {
+  "formula": "cumplimiento = ingresos del producto / objetivo del trimestre",
+  "defs": [
+   [
+    "Fuentes",
+    "Datos ficticios generados para este ejemplo. En un caso real: la tienda, el ERP o el almacén de datos, con su fecha."
+   ],
+   [
+    "Cumplimiento",
+    "Color progresivo: menta en el 100 %, amarillo hacia el 85 %, naranja y rosa-violeta del 70 % para abajo."
+   ],
+   [
+    "Colores",
+    "Verde = primario: la cifra principal, lo interactivo y la serie principal. Estado: menta = bien · amarillo = atención · rosa-violeta = bloqueo · gris = sin empezar; cada estado lleva además su icono."
+   ],
+   [
+    "Siglas",
+    "T4 = cuarto trimestre · S36 = semana 36."
+   ],
+   [
+    "Límites",
+    "Las devoluciones se cuentan en la semana en que se registran, no en la de la venta."
+   ],
+   [
+    "Navegar",
+    "La barra de filtros afecta a toda la página y se recuerda en este navegador. Pulsa un producto para ver su detalle; las tablas se ordenan por la cabecera y se exportan a CSV."
+   ]
+  ]
+ }
+}

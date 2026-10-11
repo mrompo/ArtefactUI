@@ -1,0 +1,21 @@
+{
+  "name": "artefactui",
+  "version": "1.0.0",
+  "description": "ArtefactUI: el design system para dashboards y artefactos HTML que genera la IA. Kit de componentes, reglas de diseño, iconos al estilo Notion, modo oscuro Cobalt2 y validación.",
+  "author": {
+    "name": "Manuel Romero"
+  },
+  "homepage": "https://github.com/mrompo/ArtefactUI",
+  "repository": "https://github.com/mrompo/ArtefactUI",
+  "license": "MIT",
+  "keywords": [
+    "artifacts",
+    "dashboards",
+    "design-system",
+    "claude-code",
+    "react",
+    "tailwind",
+    "recharts",
+    "lucide"
+  ]
+}

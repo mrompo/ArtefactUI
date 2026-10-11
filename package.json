@@ -1,0 +1,37 @@
+{
+  "name": "artefactui",
+  "version": "1.0.0",
+  "description": "El design system para dashboards y artefactos HTML que genera la IA: componentes React + Tailwind + Recharts + lucide en un único HTML, modo oscuro Cobalt2, iconos al estilo Notion.",
+  "keywords": [
+    "dashboard",
+    "artifacts",
+    "design-system",
+    "claude",
+    "react",
+    "tailwind",
+    "recharts",
+    "lucide",
+    "htm"
+  ],
+  "homepage": "https://github.com/mrompo/ArtefactUI#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrompo/ArtefactUI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mrompo/ArtefactUI/issues"
+  },
+  "license": "MIT",
+  "author": "Manuel Romero",
+  "files": [
+    "kit/",
+    "packs/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "python3 kit/montar.py --app ejemplos/tienda/app.js --datos ejemplos/tienda/datos.json --pack packs/comercio.js --salida dist/tienda.html && python3 kit/montar.py --app galeria/app.js --datos galeria/datos.json --pack packs/comercio.js --salida dist/galeria.html",
+    "test": "npm run build && python3 kit/probar.py dist/tienda.html"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "artefactui",
+  "description": "Marketplace de ArtefactUI",
+  "owner": { "name": "Manuel Romero" },
+  "plugins": [
+    {
+      "name": "artefactui",
+      "source": "./",
+      "description": "El design system para dashboards y artefactos HTML que genera la IA"
+    }
+  ]
+}

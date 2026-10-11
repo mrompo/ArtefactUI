@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+# datos reales de cada usuario: nunca al repositorio
+datos-privados/
+*.privado.json
