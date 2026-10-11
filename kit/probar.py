@@ -23,12 +23,17 @@ pagina = open(sys.argv[1], encoding='utf-8').read()
 script = open(os.path.join(KIT, 'probar.js'), encoding='utf-8').read()
 with tempfile.NamedTemporaryFile('w', suffix='.html', delete=False, encoding='utf-8') as t:
     t.write(pagina.replace('</body>', '<script>\n' + script + '\n</script></body>'))
-dom = subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--virtual-time-budget=20000', '--dump-dom', 'file://' + t.name],
-                     capture_output=True, text=True).stdout
+args = [CHROME, '--headless=new', '--disable-gpu', '--virtual-time-budget=20000']
+if sys.platform.startswith('linux') or os.environ.get('CI'):
+    args += ['--no-sandbox', '--disable-dev-shm-usage']      # Chromium en contenedores y en GitHub Actions
+r = subprocess.run(args + ['--dump-dom', 'file://' + t.name], capture_output=True, text=True)
+dom = r.stdout
 os.unlink(t.name)
 m = re.search(r'<pre id="RESULTADO">(.*?)</pre>', dom, re.S)
 if not m:
-    sys.exit('Sin resultado: la página no ha llegado a pintarse (error de JS o de una librería).')
+    detalle = '\n'.join(l for l in r.stderr.splitlines() if l.strip())[-1500:]
+    sys.exit('Sin resultado: la página no ha llegado a pintarse (error de JS, de una librería o del navegador).'
+             + ('\n--- salida de Chrome ---\n' + detalle if detalle else ''))
 res = html.unescape(m.group(1))
 print(res)
 sys.exit(1 if 'FALLA' in res else 0)
