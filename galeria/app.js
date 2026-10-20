@@ -8,7 +8,7 @@ const Rompe = () => { throw new Error('Error simulado para enseñar <Protegido>.
 
 function App(){
   const theme = useTheme(), T = useTokens(theme.efectivo);
-  const [seg, setSeg] = useState('a'), [q, setQ] = useState(''), [hoja, setHoja] = useState(false);
+  const [seg, setSeg] = useState('a'), [q, setQ] = useState(''), [hoja, setHoja] = useState(false), [fila, setFila] = useState(null), nav = useNavegacion();
   const filas = [{k: 'Auriculares Pro', e: 'Web', h: 18400, i: 'audio'}, {k: 'Reloj Sport', e: 'App', h: 15200, i: 'reloj'}, {k: 'Altavoz Mini', e: 'Marketplace', h: 9800, i: 'altavoz'},
     {k: 'Teclado mecánico', e: 'Web', h: 7600, i: 'teclado'}, {k: 'Tableta 10"', e: 'App', h: 11100, i: 'tableta'}];
   return html`<div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
@@ -79,10 +79,10 @@ function App(){
           <${Muestra} titulo="Selector segmentado" uso="<Segmented options value onChange label />"><${Segmented} label="Ejemplo" options=${[['a', 'Mensual'], ['b', 'Acumulado'], ['c', 'Total']]} value=${seg} onChange=${setSeg} /><//>
           <${Muestra} titulo="Búsqueda (atajo «/»)" uso="<Buscador value onChange placeholder /> · coincide(q, …textos)"><${Buscador} value=${q} onChange=${setQ} placeholder="Busca en la tabla" /><//>
         </div>
-        <${SortTable} rows=${filas} q=${q} rowKey=${r => r.k} onRow=${() => setHoja(true)} exportar="galeria" limite=${4} cols=${[
+        <${SortTable} rows=${filas} q=${q} rowKey=${r => r.k} onRow=${r => setFila(r.k)} activa=${fila} nav=${nav} exportar="galeria" limite=${4} cols=${[
           {k: 'k', label: 'Producto', help: 'Nombre del producto.', r: r => html`<span className="inline-flex items-center gap-2"><${Icono} n=${r.i} size=${13} />${r.k}</span>`},
           {k: 'e', label: 'Canal', help: 'Canal principal de venta.'}, {k: 'h', label: 'Ingresos', help: 'Ingresos del trimestre, en euros.', align: 'right', r: r => nf(r.h)}]} />
-        <${Uso}>${'<SortTable rows cols rowKey q onRow exportar="nombre" limite={4} tono vacio />'}<//>
+        <${Uso}>${'<SortTable rows cols rowKey q onRow activa={sel} nav={nav} exportar="nombre" limite={4} tono vacio /> · const nav = useNavegacion() · <Hoja nav={nav}>'}<//>
         <button type="button" onClick=${() => setHoja(true)} className="press inline-flex w-fit items-center gap-2 rounded-full bg-accent-soft px-4 py-2 text-sm font-medium text-accent"><${I.PanelRight} size=${16} /> Abrir una hoja de detalle</button>
       <//>
 
@@ -104,5 +104,12 @@ function App(){
       <${Datos} items=${[['Se cierra con', 'Esc, el fondo o la ×'], ['Foco', 'queda dentro y vuelve al cerrar'], ['Uso', '<Hoja abierta onCerrar titulo>']]} />
       <${Anillo} p=${66} t=${.66} size=${72} grosor=${7} />
     <//>
+    ${(() => { const r = filas.find(x => x.k === fila), otras = r ? filas.filter(x => x.e === r.e && x.k !== r.k) : [];
+      return html`<${Hoja} abierta=${!!r} onCerrar=${() => setFila(null)} nav=${nav} titulo=${r?.k} sub=${r && `Canal ${r.e}`} icon=${r?.i}>
+        ${r ? html`<${React.Fragment}>
+          <${Datos} items=${[['Ingresos', nf(r.h) + ' €'], ['Navegar', '↑ ↓ o los botones de arriba, en el orden de la tabla'], ['Uso', '<Hoja nav={nav}> · <SortTable activa nav>']]} />
+          <${Relacionados} titulo=${`Mismo canal (${r.e})`} items=${otras.map(x => ({id: x.k, titulo: nf(x.h) + ' €', texto: 'Se ve aquí sin salir del detalle; «Ver el detalle» salta a esa fila.', abrir: () => setFila(x.k)}))} />
+          ${otras.length ? null : html`<p className="text-sm text-muted">Ningún otro producto vende por ${r.e}. <code>${'<Relacionados titulo items />'}</code> no pinta nada si no hay elementos.</p>`}
+        <//>` : null}<//>`; })()}
   </div>`;
 }

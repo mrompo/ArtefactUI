@@ -106,8 +106,8 @@ h1,h2,h3{text-wrap:balance} p,dd,li{text-wrap:pretty}
 @keyframes growX{from{transform:scaleX(0)}}
 @keyframes latido{0%,100%{opacity:1}50%{opacity:.35}}
 .reveal.play > *{animation:rise var(--t-entrada) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms)}
-.grow{transform-origin:left}
-.play .grow{animation:growX var(--t-datos) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms + 120ms)}
+.crece{transform-origin:left}
+.play .crece{animation:growX var(--t-datos) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms + 120ms)}
 .latido{animation:latido 2.4s ease-in-out infinite}
 .press{transition:transform var(--t-ui) var(--spring),background-color var(--t-ui),color var(--t-ui)}
 .press:active{transform:scale(.97)}
@@ -117,6 +117,12 @@ h1,h2,h3{text-wrap:balance} p,dd,li{text-wrap:pretty}
 input[type=search]::-webkit-search-cancel-button{display:none}
 @media print{nav,[role=search],.press{display:none!important} body{background:#fff}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+/* Columnas fijas de SortTable (fijas = n): pegadas desde 640 px, con fondo opaco que sigue al hover de la fila */
+td.fija{background:var(--card)}
+tr:hover>td.fija,tr.activa>td.fija{background:linear-gradient(var(--row-hover),var(--row-hover)),var(--card)}
+th.fija{background:linear-gradient(var(--thead),var(--thead)),var(--card)}
+@media (min-width:640px){.fija{position:sticky;z-index:1} th.fija{z-index:2}}
 </style>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <script>
@@ -204,11 +210,12 @@ function Reveal({as = 'div', className = '', children}){
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { el.classList.add('play'); io.disconnect(); } }), {threshold: .15}); io.observe(el); return () => io.disconnect(); }, []);
   return React.createElement(as, {ref, className: cx('reveal', className)}, children);
 }
-// Contador que sube desde 0 al montarse (800 ms; respeta Reducir movimiento)
+// Contador que sube desde 0 al montarse (800 ms; respeta Reducir movimiento). El inicio es el tiempo del primer
+// fotograma, no performance.now(): con relojes distintos el avance salía negativo y la cifra parpadeaba en negativo
 function Count({to, dec = 0, pre = '', suf = ''}){
   const [v, setV] = useState(RM ? to : 0);
-  useEffect(() => { if (RM) { setV(to); return; } let raf; const t0 = performance.now();
-    const tick = t => { const p = Math.min(1, (t - t0) / 800); setV(to * (1 - Math.pow(1 - p, 3))); if (p < 1) raf = requestAnimationFrame(tick); };
+  useEffect(() => { if (RM) { setV(to); return; } let raf, t0;
+    const tick = t => { t0 ??= t; const p = Math.min(1, (t - t0) / 800); setV(to * (1 - Math.pow(1 - p, 3))); if (p < 1) raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf); }, [to]);
   return html`<span className="num">${pre}${nf(v, dec)}${suf}</span>`;
 }
@@ -245,11 +252,11 @@ const ICONO_GUIA = {fuentes: I.Database, 'fórmula': I.Sigma, colores: I.Palette
 const Card = ({className = '', children}) => html`<div className=${cx('rounded-card border border-line bg-card shadow-card backdrop-blur-sm', className)}>${children}</div>`;
 // Lista agrupada (estilo «inset grouped» de Apple): un contenedor, filas separadas por un separador fino sangrado
 const Grouped = ({children}) => html`<${Card} className="overflow-hidden"><${Reveal} className="divide-y divide-line">${children}<//><//>`;
-const Bar = ({p, color, tono, t}) => html`<div className="h-1.5 w-full overflow-hidden rounded-full bg-line"><div className="grow h-full rounded-full"
+const Bar = ({p, color, tono, t}) => html`<div className="h-1.5 w-full overflow-hidden rounded-full bg-line"><div className="crece h-full rounded-full"
   style=${{width: Math.max(0, Math.min(100, p)) + '%', background: color || (t != null ? semaforo(t) : {ok: 'var(--ok)', neu: 'var(--faint)'}[tono || 'ok'] || `var(--${tono})`)}}></div></div>`;
 // Barra apilada fina con separadores entre segmentos (HIG: separar áreas de color contiguas)
 const Stack = ({parts}) => { const tot = parts.reduce((a, [v]) => a + v, 0) || 1;
-  return html`<div className="flex h-1.5 gap-px overflow-hidden rounded-full bg-line">${parts.filter(([v]) => v > 0).map(([v, c], i) => html`<div key=${i} className="grow h-full" style=${{width: pct(v, tot) + '%', background: c}}></div>`)}</div>`; };
+  return html`<div className="flex h-1.5 gap-px overflow-hidden rounded-full bg-line">${parts.filter(([v]) => v > 0).map(([v, c], i) => html`<div key=${i} className="crece h-full" style=${{width: pct(v, tot) + '%', background: c}}></div>`)}</div>`; };
 // Selector segmentado de Apple: el indicador se desliza al elegir (muelle, 280 ms)
 function Segmented({options, value, onChange, label}){
   const wrap = useRef(null), [ind, setInd] = useState(null), [animar, setAnimar] = useState(false);   // solo se anima al elegir, nunca al cargar
@@ -278,13 +285,15 @@ const Section = ({id, title, sub, right, leyenda, icon, tint, children}) => html
   ${leyenda ? html`<${Leyenda} ...${leyenda} />` : null}<${Protegido} nombre=${typeof title === 'string' ? `«${title}»` : 'esta sección'}>${children}<//></section>`;
 
 // Cabecera: barra con material translúcido, título grande, estado con punto y selector de periodo
-function Header({theme, eyebrow, title, lede, estado, periodos, periodo, setPeriodo, links, icono}){
+// barra: controles propios en la barra superior, junto al título (navegación entre páginas, selector de elemento…)
+function Header({theme, eyebrow, title, lede, estado, periodos, periodo, setPeriodo, links, icono, barra}){
   return html`<${React.Fragment}>
     <nav className="sticky top-0 z-20 -mx-4 border-b border-line backdrop-blur-md sm:-mx-6" style=${{background: 'var(--nav)'}}>
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-5 px-4 sm:px-6">
-        <span className="truncate text-sm font-semibold text-strong">${title}</span>
-        <div className="ml-auto hidden gap-5 text-sm md:flex">${links.map(([h, l, Ic]) => html`<a key=${h} href=${'#' + h} className="inline-flex items-center gap-1.5 text-muted no-underline hover:text-ink">${typeof Ic === 'string' ? html`<${Icono} n=${Ic} size=${14} tile=${false} />` : Ic ? html`<${Ic} size=${15} aria-hidden="true" />` : null}${l}</a>`)}</div>
-        <div className="ml-auto md:ml-0"><${ThemeToggle} theme=${theme} /></div>
+        <span className=${cx('truncate text-sm font-semibold text-strong', barra ? 'hidden max-w-[12rem] lg:inline' : '')}>${title}</span>
+        ${barra ? html`<div className="flex shrink-0 items-center gap-1.5">${barra}</div>` : null}
+        <div className=${cx('ml-auto hidden whitespace-nowrap text-sm', barra ? 'gap-4 xl:flex' : 'gap-5 md:flex')}>${links.map(([h, l, Ic]) => html`<a key=${h} href=${'#' + h} className="inline-flex items-center gap-1.5 text-muted no-underline hover:text-ink">${typeof Ic === 'string' ? html`<${Icono} n=${Ic} size=${14} tile=${false} />` : Ic ? html`<${Ic} size=${15} aria-hidden="true" />` : null}${l}</a>`)}</div>
+        <div className=${cx('ml-auto', barra ? 'xl:ml-0' : 'md:ml-0')}><${ThemeToggle} theme=${theme} /></div>
       </div>
     </nav>
     <header className="flex flex-col gap-3 pt-10">
@@ -300,9 +309,10 @@ function Header({theme, eyebrow, title, lede, estado, periodos, periodo, setPeri
     </header>
   <//>`;
 }
-// Manual de interpretación (obligatorio), abierto la primera vez que se publica (divulgación progresiva)
-function Guia({formula, defs, escala: esc_}){
-  return html`<details id="guia" open className="group scroll-mt-20 rounded-card border border-line bg-card shadow-card backdrop-blur-sm">
+// Manual de interpretación (obligatorio), abierto la primera vez que se publica (divulgación progresiva).
+// abierta={false} lo deja cerrado al cargar (páginas de trabajo que se abren a diario)
+function Guia({formula, defs, escala: esc_, abierta = true}){
+  return html`<details id="guia" open=${abierta} className="group scroll-mt-20 rounded-card border border-line bg-card shadow-card backdrop-blur-sm">
     <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-soft text-accent"><${I.BookOpen} size=${18} /></span>
       <span className="flex-1"><b className="block text-base font-semibold text-strong">Cómo leer este informe</b><small className="text-xs text-muted">De dónde salen los datos, cómo se calcula cada cifra y qué significa cada color</small></span>
@@ -368,6 +378,47 @@ function Buscador({value, onChange, placeholder = 'Buscar', atajo = true}){
       : atajo ? html`<kbd className="pointer-events-none absolute right-3 rounded border border-line px-1 font-mono text-[11px] text-faint">/</kbd>` : null}
   </label>`;
 }
+// Desplegable de filtro. options = [[valor, etiqueta]]; todos = texto de la opción vacía (sin filtro). label: nombre accesible.
+// Menú propio, no <select>: el menú nativo del navegador no se ve bien dentro del visor de artifacts (sale vacío o sin contraste).
+// Teclado: ↑ ↓ Inicio Fin para moverse, Intro o espacio para elegir, Esc para cerrar
+let DESPLEGABLES = 0;
+function Desplegable({label, value, onChange, options, todos}){
+  const ops = todos != null ? [['', todos], ...options] : options;
+  const [abierto, setAbierto] = useState(false), [activo, setActivo] = useState(0);
+  const id = useRef('desplegable-' + (++DESPLEGABLES)).current, caja = useRef(null), boton = useRef(null), lista = useRef(null);
+  const actual = ops.find(([k]) => String(k) === String(value ?? '')), sel = Math.max(0, ops.findIndex(([k]) => String(k) === String(value ?? '')));
+  const abrir = () => { setActivo(sel); setAbierto(true); };
+  const cerrar = (foco = true) => { setAbierto(false); if (foco) boton.current?.focus(); };
+  const elegir = k => { onChange(k); cerrar(); };
+  useEffect(() => { if (!abierto) return; lista.current?.focus();
+    const fuera = e => { if (!caja.current?.contains(e.target)) setAbierto(false); };
+    document.addEventListener('pointerdown', fuera); return () => document.removeEventListener('pointerdown', fuera); }, [abierto]);
+  useEffect(() => { if (abierto) lista.current?.querySelector(`#${id}-${activo}`)?.scrollIntoView({block: 'nearest'}); }, [abierto, activo]);
+  const teclaBoton = e => { if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); abrir(); } };
+  const teclaLista = e => {
+    const mover = n => { e.preventDefault(); setActivo(n); };
+    if (e.key === 'ArrowDown') mover(Math.min(ops.length - 1, activo + 1)); else if (e.key === 'ArrowUp') mover(Math.max(0, activo - 1));
+    else if (e.key === 'Home') mover(0); else if (e.key === 'End') mover(ops.length - 1);
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); elegir(ops[activo][0]); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrar(); } else if (e.key === 'Tab') cerrar(false); };
+  const filtrando = String(value ?? '') !== '';
+  return html`<div ref=${caja} className="relative inline-flex">
+    <button ref=${boton} type="button" aria-haspopup="listbox" aria-expanded=${abierto} aria-label=${`${label}: ${actual ? actual[1] : todos || ''}`}
+      onClick=${() => abierto ? cerrar() : abrir()} onKeyDown=${teclaBoton}
+      className=${cx('press inline-flex min-h-[34px] max-w-[18rem] items-center gap-1.5 rounded-full border bg-card px-3.5 text-xs', filtrando ? 'border-accent-line' : 'border-line')}
+      style=${{color: 'var(--input-ink)'}}><span className="truncate">${actual ? actual[1] : todos || label}</span>
+      <${I.ChevronDown} size=${14} aria-hidden="true" className=${cx('shrink-0 transition-transform', abierto && 'rotate-180')} /></button>
+    ${abierto ? html`<ul ref=${lista} role="listbox" tabIndex=${-1} aria-label=${label} aria-activedescendant=${`${id}-${activo}`} onKeyDown=${teclaLista}
+      className="absolute left-0 top-full z-30 mt-1 max-h-72 min-w-full overflow-auto rounded-2xl border border-line-strong p-1 shadow-card outline-none"
+      style=${{background: 'var(--card)', width: 'max-content', maxWidth: 'min(22rem, calc(100vw - 2rem))', animation: 'fade var(--t-ui) var(--spring)'}}>
+      ${ops.map(([k, l], n) => { const elegido = String(k) === String(value ?? '');
+        return html`<li key=${String(k)} id=${`${id}-${n}`} role="option" aria-selected=${elegido} onPointerEnter=${() => setActivo(n)} onClick=${() => elegir(k)}
+          className=${cx('flex cursor-pointer items-center gap-2 rounded-xl px-3 py-1.5 text-xs', elegido ? 'font-semibold text-strong' : 'text-ink')}
+          style=${n === activo ? {background: 'var(--row-hover)'} : null}>
+          <span className="inline-flex w-3.5 shrink-0 justify-center">${elegido ? html`<${I.Check} size=${13} aria-hidden="true" className="text-accent" />` : null}</span>${l}</li>`; })}
+    </ul>` : null}
+  </div>`;
+}
 // Barra de filtros global, pegada bajo la barra superior. filtros = useFiltros().
 // grupos = {id: etiqueta} (canal, región, equipo…); elementos = [{slug, nombre}] (producto, cliente, persona…); todo opcional
 function BarraFiltros({filtros, periodos, grupos, elementos, etiquetaGrupos = 'Grupo', todosGrupos = 'Todos', etiquetaElementos = 'Elemento', todosElementos = 'Todos',
@@ -378,11 +429,62 @@ function BarraFiltros({filtros, periodos, grupos, elementos, etiquetaGrupos = 'G
       <${I.SlidersHorizontal} size=${16} className="text-faint" aria-hidden="true" />
       ${periodos ? html`<${Segmented} label="Periodo" options=${periodos} value=${f.periodo} onChange=${v => set({periodo: v})} />` : null}
       ${grupos ? html`<${Segmented} label=${etiquetaGrupos} options=${[['todos', todosGrupos], ...Object.entries(grupos)]} value=${f.elemento ? null : f.grupo} onChange=${v => set({grupo: v, elemento: ''})} />` : null}
-      ${elementos ? html`<select aria-label=${etiquetaElementos} value=${f.elemento} onChange=${e => set({grupo: 'todos', elemento: e.target.value})}
-        className="min-h-[34px] rounded-full border border-line bg-card px-3.5 text-xs" style=${{color: 'var(--input-ink)'}}><option value="">${todosElementos}</option>${elementos.map(x => html`<option key=${x.slug} value=${x.slug}>${x.nombre}</option>`)}</select>` : null}
+      ${elementos ? html`<${Desplegable} label=${etiquetaElementos} value=${f.elemento} onChange=${v => set({grupo: 'todos', elemento: v})} todos=${todosElementos}
+        options=${elementos.map(x => [x.slug, x.nombre])} />` : null}
       ${buscar ? html`<${Buscador} value=${f.q} onChange=${q => set({q})} placeholder=${placeholder} />` : null}
       ${activos ? html`<button type="button" onClick=${reset} className="press inline-flex min-h-[30px] items-center gap-1 rounded-full px-3 text-xs font-medium text-accent hover:bg-accent-soft"><${I.RotateCcw} size=${13} aria-hidden="true" /> Restablecer (${activos})</button>` : null}
     </div></div>`;
+}
+
+/* ---------- Edición: campos y estado compartido ---------- */
+// Campo editable (número, texto o nota). Número: escribe con coma o punto; vacío = null. unidad: «€», «uds»…; help: texto bajo el campo.
+// original: valor de partida; si el campo lo cambia, se marca y ofrece volver a él
+function Campo({label, value, onChange, tipo = 'numero', unidad, help, min, max, step = 1, original, disabled, ancho = 'w-28', placeholder}){
+  const num = tipo === 'numero', [txt, setTxt] = useState(value == null ? '' : num ? String(value).replace('.', ',') : value);
+  useEffect(() => { const v = num ? (txt === '' ? null : Number(txt.replace(',', '.'))) : txt; if (v !== value) setTxt(value == null ? '' : num ? String(value).replace('.', ',') : value); }, [value]);
+  const cambia = t => { setTxt(t); if (!num) return onChange(t); if (t.trim() === '') return onChange(null);
+    const v = Number(t.replace(',', '.')); if (!Number.isNaN(v)) onChange(min != null || max != null ? Math.min(max ?? Infinity, Math.max(min ?? -Infinity, v)) : v); };
+  const tocado = original !== undefined && value != null && value !== original;
+  const cls = 'min-h-[34px] rounded-xl border bg-card px-3 text-sm num disabled:opacity-60 ' + (tocado ? 'border-[var(--warn)]' : 'border-line');
+  const input = tipo === 'nota'
+    ? html`<textarea value=${txt} onChange=${e => cambia(e.target.value)} disabled=${disabled} rows="2" placeholder=${placeholder} aria-label=${label} className=${cx(cls, 'w-full py-2')} style=${{color: 'var(--input-ink)'}}></textarea>`
+    : html`<input value=${txt} onChange=${e => cambia(e.target.value)} disabled=${disabled} inputMode=${num ? 'decimal' : 'text'} placeholder=${placeholder} aria-label=${label}
+        className=${cx(cls, ancho, num && 'text-right')} style=${{color: 'var(--input-ink)'}} />`;
+  return html`<label className=${cx('flex flex-col gap-1', tipo === 'nota' && 'w-full')}>
+    ${label ? html`<span className="text-xs font-medium text-muted">${label}</span>` : null}
+    <span className="flex items-center gap-2">${input}${unidad ? html`<span className="text-xs text-muted">${unidad}</span>` : null}
+      ${tocado ? html`<button type="button" onClick=${() => onChange(original)} title=${'Volver a ' + nf(original, 2)} aria-label=${'Volver al valor de partida, ' + original}
+        className="press inline-flex h-7 w-7 items-center justify-center rounded-full text-faint hover:text-ink"><${I.Undo2} size=${14} /></button>` : null}</span>
+    ${help ? html`<span className="caption text-xs">${help}</span>` : null}</label>`;
+}
+// Estado compartido en la base de datos del artifact (capacidad db; publícalo con capabilities: {db: {}, user: {}}).
+// ruta: documento («escenarios/actual»). Devuelve [valor, set(patch|fn), estado]; estado: 'cargando' | 'compartido' | 'local' (sin db: solo en esta vista) | 'solo-lectura' | 'guardando'.
+// Escribe el documento entero, una escritura cada vez y agrupando las ráfagas (espera 700 ms sin cambios). Fuera del visor funciona en memoria.
+function useCompartido(ruta, inicial = {}){
+  const [v, setV] = useState(inicial), [estado, setEstado] = useState('cargando');
+  const ref = useRef(null), pend = useRef(null), timer = useRef(null), enCurso = useRef(false), ultimo = useRef(null);
+  useEffect(() => { let vivo = true, unsub = null;
+    const sinDb = setTimeout(() => { if (vivo && !ref.current) setEstado('local'); }, 4000);
+    Promise.resolve(window.claude?.use?.('db')).then(async db => { if (!vivo) return; if (!db) { setEstado('local'); return; }
+      const u = await Promise.resolve(window.claude?.use?.('user')).catch(() => null);
+      const puede = u ? await u.can?.('data.write') : null;
+      ref.current = db.doc(ruta);
+      unsub = ref.current.onSnapshot(s => { if (!vivo || s.metadata?.hasPendingWrites) return; const d = s.exists ? s.data() : null;
+        if (d && JSON.stringify(d) !== ultimo.current && !pend.current) setV({...inicial, ...d});
+        setEstado(e => e === 'guardando' ? e : puede === false ? 'solo-lectura' : 'compartido'); },
+        () => { if (vivo) setEstado('local'); });
+    }).catch(() => { if (vivo) setEstado('local'); });
+    return () => { vivo = false; clearTimeout(sinDb); unsub?.(); };
+  }, [ruta]);
+  const escribir = async () => { if (!ref.current || enCurso.current || !pend.current) return;
+    const d = pend.current; pend.current = null; enCurso.current = true; setEstado('guardando');
+    try { ultimo.current = JSON.stringify(d); await ref.current.set(d); setEstado('compartido'); }
+    catch (e) { if (e?.code === 'invalid_argument') { setEstado('solo-lectura'); toast('No tienes permiso para guardar cambios en esta página', 'warn'); }
+      else { setEstado('compartido'); toast('No se ha podido guardar; se reintentará con el próximo cambio', 'warn'); } }
+    finally { enCurso.current = false; if (pend.current) escribir(); } };
+  const set = patch => setV(x => { const n = typeof patch === 'function' ? patch(x) : {...x, ...patch};
+    if (estado !== 'solo-lectura') { pend.current = n; clearTimeout(timer.current); timer.current = setTimeout(escribir, 700); } return n; });
+  return [v, set, estado];
 }
 
 /* ---------- Avisos breves (toasts) ---------- */
@@ -479,10 +581,30 @@ function Spark({datos, width = 96, height = 28, color = 'var(--accent-2)'}){
 const Datos = ({items}) => html`<dl className="divide-y divide-line overflow-hidden rounded-2xl border border-line">${items.filter(Boolean).map(([l, v]) => html`<div key=${l} className="flex justify-between gap-4 px-4 py-2.5 text-sm">
   <dt className="text-muted">${l}</dt><dd className="num text-right font-medium text-strong">${v}</dd></div>`)}</dl>`;
 
+// Relacionados: lo que cita un detalle (dependencias, causas, documentos), con su descripción a la vista para no tener que ir
+// a buscarlo a otra sección. items = [{id, titulo, texto?, estado? (p. ej. un <Pill>), extra? (nodo), abrir? () => …}]
+const Relacionados = ({titulo = 'Relacionado', items}) => !items?.length ? null : html`<div className="flex flex-col gap-2"><h3 className="text-sm font-semibold text-strong">${titulo}</h3>
+  <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line">${items.map(x => html`<div key=${x.id} className="flex flex-col gap-1.5 px-4 py-3">
+    <div className="flex items-start gap-2"><b className="shrink-0 font-semibold text-strong">${x.id}</b><span className="min-w-0 flex-1 text-sm text-strong">${x.titulo}</span>${x.estado || null}</div>
+    ${x.texto ? html`<p className="text-sm text-muted">${x.texto}</p>` : null}${x.extra || null}
+    ${x.abrir ? html`<div><button type="button" onClick=${x.abrir} className="press text-xs font-medium text-accent hover:underline">Ver el detalle de ${x.id}</button></div>` : null}
+  </div>`)}</div></div>`;
+
+/* ---------- Navegación entre detalles ---------- */
+// const nav = useNavegacion(); <SortTable onRow activa={clave abierta} nav={nav} /> y <Hoja nav={nav}>. La tabla publica dónde está la fila
+// abierta en el orden que se ve (búsqueda, filtros y orden por columna incluidos) y atiende ↑ ↓; la hoja pinta anterior / siguiente
+// y «3 de 12». Un nav por tabla. Si dos tablas abren la misma hoja, activa solo en la que la abrió.
+function useNavegacion(){
+  const [pos, setPos] = useState(null), ir = useRef(null);
+  return useMemo(() => ({pos, setPos, ir}), [pos]);
+}
+
 /* ---------- Hoja de detalle (sheet de Apple) ---------- */
-// Lateral en escritorio, desde abajo en móvil. Esc o el fondo la cierran; el foco queda dentro y vuelve al cerrar
-function Hoja({abierta, onCerrar, titulo, sub, icon, avatar, children}){
-  const ref = useRef(null);
+// Lateral en escritorio, desde abajo en móvil. Esc o el fondo la cierran; el foco queda dentro y vuelve al cerrar.
+// nav (useNavegacion): botones anterior / siguiente y posición; ↑ ↓ los atiende la tabla
+function Hoja({abierta, onCerrar, titulo, sub, icon, avatar, nav, children}){
+  const ref = useRef(null), p = nav?.pos;
+  useEffect(() => { if (abierta) ref.current?.scrollTo?.({top: 0}); }, [p?.i]);   // al pasar de un detalle a otro, desde arriba
   useEffect(() => {
     if (!abierta) return;
     const prev = document.activeElement, el = ref.current, foco = () => [...el.querySelectorAll('button, [href], input, select, [tabindex]:not([tabindex="-1"])')];
@@ -501,6 +623,10 @@ function Hoja({abierta, onCerrar, titulo, sub, icon, avatar, children}){
       <div className="mb-5 flex items-start gap-3">${avatar || (icon ? html`<${IconBadge} icon=${icon} size=${40} />` : null)}
         <div className="min-w-0 flex-1"><h2 className="text-xl font-bold tracking-tight text-strong">${titulo}</h2>${sub ? html`<p className="mt-0.5 text-sm text-muted">${sub}</p>` : null}</div>
         <button type="button" onClick=${onCerrar} aria-label="Cerrar" className="press inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-line text-muted hover:text-ink"><${I.X} size=${18} /></button></div>
+      ${p && p.n > 1 ? html`<div className="-mt-2 mb-4 flex items-center gap-2 text-xs text-muted">
+        ${[[-1, 'Anterior', I.ChevronUp, p.i === 0], [1, 'Siguiente', I.ChevronDown, p.i === p.n - 1]].map(([d, l, Ic, fin]) => html`<button key=${l} type="button" disabled=${fin} onClick=${() => nav.ir.current?.(d)} aria-label=${l}
+          className="press inline-flex h-7 w-7 items-center justify-center rounded-full bg-line text-muted hover:text-ink disabled:opacity-40"><${Ic} size=${15} /></button>`)}
+        <span className="num">${p.i + 1} de ${p.n}</span><span className="text-faint">· también con ↑ ↓</span></div>` : null}
       <div className="flex flex-col gap-5">${children}</div></div></div>`;
 }
 
@@ -519,35 +645,65 @@ function Kpi({label, value, dec = 0, pre = '', suf = '', delta, tono = 'ok', hin
     : html`<${Card} className="flex flex-col gap-2 p-5">${cuerpo}<//>`;
 }
 // Tabla operativa: ordena por cabecera, explica cada columna (i), filtra por q (texto: fila => cadena), abre el detalle (onRow),
-// exporta lo que se ve (exportar = nombre del fichero), muestra un estado vacío (vacio) y limita filas con «Mostrar más» (limite)
-function SortTable({cols, rows, rowKey, tono, minWidth = 720, q = '', texto, onRow, vacio, exportar, limite = 0}){
+// exporta lo que se ve (exportar = nombre del fichero), muestra un estado vacío (vacio) y limita filas con «Mostrar más» (limite).
+// fijas = n deja fijas las n primeras columnas al desplazar en horizontal (desde 640 px de ancho; en móvil no caben).
+// activa = clave de la fila abierta en la hoja: se resalta y ↑ ↓ pasan a la anterior / siguiente en el orden que se ve; nav = useNavegacion()
+function SortTable({cols, rows, rowKey, tono, minWidth = 720, q = '', texto, onRow, vacio, exportar, limite = 0, fijas = 0, activa, nav}){
   const [sort, setSort] = useState({k: null, dir: 1}), [mas, setMas] = useState(false);
   const filtradas = useMemo(() => !q ? rows : rows.filter(r => coincide(q, texto ? texto(r) : cols.map(c => c.v ? c.v(r) : r[c.k]).join(' '))), [rows, q]);
   const sorted = useMemo(() => { if (!sort.k) return filtradas; const c = cols.find(c => c.k === sort.k), val = c.v || (r => r[c.k]);
     return [...filtradas].sort((a, b) => { const x = val(a), y = val(b); if (x == null || x === '') return 1; if (y == null || y === '') return -1;
       return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'es')) * sort.dir; }); }, [filtradas, sort]);
   const vis = limite && !mas ? sorted.slice(0, limite) : sorted;
+  // Fila abierta: ↑ ↓ (fuera de campos de texto y si nadie más usó la tecla) pasan a la anterior / siguiente; nav lo comparte con la Hoja
+  const iAct = activa == null || !onRow ? -1 : sorted.findIndex(r => rowKey(r) === activa);
+  const mover = d => { const j = iAct + d; if (iAct < 0 || j < 0 || j >= sorted.length) return false;
+    if (limite && !mas && j >= limite) setMas(true); onRow(sorted[j]); return true; };
+  const moverRef = useRef(mover); moverRef.current = mover;
+  useEffect(() => { if (iAct < 0) return;
+    const h = e => { if ((e.key !== 'ArrowDown' && e.key !== 'ArrowUp') || e.defaultPrevented || e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      const a = document.activeElement; if (/^(input|textarea|select)$/i.test(a?.tagName || '') || a?.isContentEditable) return;
+      if (moverRef.current(e.key === 'ArrowDown' ? 1 : -1)) e.preventDefault(); };
+    addEventListener('keydown', h); return () => removeEventListener('keydown', h); }, [iAct >= 0]);
+  useEffect(() => { if (!nav) return; nav.ir.current = iAct < 0 ? null : d => moverRef.current(d);
+    const n = sorted.length; nav.setPos(p => iAct < 0 ? null : p && p.i === iAct && p.n === n ? p : {i: iAct, n}); });
   const click = c => setSort(s => { const num = rows.some(r => typeof (c.v || (x => x[c.k]))(r) === 'number');
     return s.k === c.k ? {k: c.k, dir: -s.dir} : {k: c.k, dir: num ? -1 : 1}; });
   const borde = {ok: 'var(--ok)', warn: 'var(--warn)', bad: 'var(--bad)', info: 'var(--info)'};
+  const [ayuda, setAyuda] = useState(null);                       // columna con la ayuda abierta (botón «i»)
+  useEffect(() => { if (!ayuda) return; const cerrar = e => { if (e.type === 'click' || e.key === 'Escape') setAyuda(null); };
+    addEventListener('click', cerrar); addEventListener('keydown', cerrar); return () => { removeEventListener('click', cerrar); removeEventListener('keydown', cerrar); }; }, [ayuda]);
   const ncol = cols.length + (onRow ? 1 : 0);
+  // Columnas fijas: se mide el ancho de las cabeceras y cada una se pega a la suma de las anteriores
+  const tabla = useRef(null), [lefts, setLefts] = useState([]);
+  useLayoutEffect(() => { if (!fijas || !tabla.current) return;
+    const medir = () => { const ths = [...tabla.current.querySelectorAll('thead th')].slice(0, fijas); let x = 0;
+      const n = ths.map(th => { const l = x; x += th.offsetWidth; return l; }); setLefts(o => o.join() === n.join() ? o : n); };
+    medir(); const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(medir) : null;
+    if (ro) [...tabla.current.querySelectorAll('thead th')].slice(0, fijas).forEach(th => ro.observe(th));
+    return () => ro?.disconnect(); }, [fijas, cols.length, vis.length]);
+  // Con columnas fijas la tabla no colapsa bordes: cada celda dibuja su línea inferior y las fijas la conservan al desplazar
+  const fija = (i, extra) => i < fijas ? {left: lefts[i] || 0, boxShadow: [extra, i === fijas - 1 ? '1px 0 0 var(--line-strong)' : null].filter(Boolean).join(', ') || undefined} : (extra ? {boxShadow: extra} : null);
   return html`<div>
     <div className="mb-2 flex min-h-[30px] items-center justify-between gap-2 text-xs text-muted">
-      <span aria-live="polite">${filtradas.length === rows.length ? `${rows.length} filas` : `${filtradas.length} de ${rows.length} filas`}${onRow ? ' · pulsa una fila para ver el detalle' : ''}</span>
+      <span aria-live="polite">${filtradas.length === rows.length ? `${rows.length} filas` : `${filtradas.length} de ${rows.length} filas`}${onRow ? ' · pulsa una fila para ver el detalle' + (nav ? '; con ↑ ↓ pasas de una a otra' : '') : ''}</span>
       ${exportar ? html`<${BotonExportar} nombre=${exportar} cols=${cols} rows=${sorted} />` : null}</div>
-    <${Card} className="overflow-x-auto"><table className="w-full border-collapse text-sm" style=${{minWidth}}>
-      <thead><tr className="border-b border-line" style=${{background: 'var(--thead)'}}>${cols.map(c => html`<th key=${c.k} scope="col" aria-sort=${sort.k === c.k ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}
-        className=${cx('whitespace-nowrap px-4 py-3 text-xs font-semibold text-muted', c.align === 'right' ? 'text-right' : 'text-left')}>
+    <${Card} className="overflow-x-auto"><table ref=${tabla} className=${cx('w-full text-sm', !fijas && 'border-collapse')} style=${fijas ? {minWidth, borderCollapse: 'separate', borderSpacing: 0} : {minWidth}}>
+      <thead><tr className="border-b border-line" style=${{background: 'var(--thead)'}}>${cols.map((c, i) => html`<th key=${c.k} scope="col" style=${fija(i)} aria-sort=${sort.k === c.k ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}
+        className=${cx('whitespace-nowrap px-4 py-3 text-xs font-semibold text-muted', c.align === 'right' ? 'text-right' : 'text-left', i < fijas && 'fija', fijas && 'border-b border-line')}>
         <span className=${cx('inline-flex items-center gap-1', c.align === 'right' && 'flex-row-reverse')}>
           <button type="button" onClick=${() => click(c)} className="press inline-flex min-h-[28px] items-center gap-1 hover:text-ink">${c.label}
             ${sort.k === c.k ? html`<${sort.dir > 0 ? I.ArrowUp : I.ArrowDown} size=${13} />` : html`<${I.ArrowUpDown} size=${13} className="opacity-40" />`}</button>
-          ${c.help ? html`<span title=${c.help} aria-label=${c.help} role="img" tabIndex="0" className="cursor-help text-faint hover:text-accent"><${I.Info} size=${14} /></span>` : null}
-        </span></th>`)}${onRow ? html`<th className="w-8" aria-label="Detalle"></th>` : null}</tr></thead>
-      <tbody>${vis.length ? vis.map(r => html`<tr key=${rowKey(r)} className=${cx('border-b border-line transition-colors last:border-0 hover:bg-[var(--row-hover)]', onRow && 'cursor-pointer')}
-          tabIndex=${onRow ? 0 : null} onClick=${onRow ? () => onRow(r) : null} onKeyDown=${onRow ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRow(r); } } : null}>
-        ${cols.map((c, i) => html`<td key=${c.k} className=${cx('px-4 py-3 align-top num', c.align === 'right' && 'text-right')}
-          style=${i === 0 && tono && tono(r) ? {boxShadow: `inset 3px 0 0 ${borde[tono(r)]}`} : null}>${c.r ? c.r(r) : esc(c.v ? c.v(r) : r[c.k])}</td>`)}
-        ${onRow ? html`<td className="px-2 py-3 text-faint"><${I.ChevronRight} size=${16} aria-hidden="true" /></td>` : null}</tr>`)
+          ${c.help ? html`<span className="relative inline-flex"><button type="button" aria-label=${'Qué es «' + c.label + '»'} aria-expanded=${ayuda === c.k} title=${c.help}
+              onClick=${e => { e.stopPropagation(); setAyuda(x => x === c.k ? null : c.k); }} className="press inline-flex h-6 w-6 items-center justify-center rounded-full text-faint hover:text-accent"><${I.Info} size=${14} /></button>
+            ${ayuda === c.k ? html`<span role="tooltip" className=${cx('absolute top-full z-30 mt-1 w-60 whitespace-normal rounded-xl border border-line-strong px-3 py-2 text-left text-xs font-normal text-ink shadow-xl', c.align === 'right' ? 'right-0' : 'left-0')}
+              style=${{background: 'var(--tip)'}}>${c.help}</span>` : null}</span>` : null}
+        </span></th>`)}${onRow ? html`<th className=${cx('w-8', fijas && 'border-b border-line')} aria-label="Detalle"></th>` : null}</tr></thead>
+      <tbody>${vis.length ? vis.map((r, ri) => html`<tr key=${rowKey(r)} className=${cx('border-b border-line transition-colors last:border-0 hover:bg-[var(--row-hover)]', onRow && 'cursor-pointer', ri === iAct && 'activa bg-[var(--row-hover)]')}
+          aria-current=${ri === iAct ? 'true' : null} tabIndex=${onRow ? 0 : null} onClick=${onRow ? () => onRow(r) : null} onKeyDown=${onRow ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRow(r); } } : null}>
+        ${cols.map((c, i) => html`<td key=${c.k} className=${cx('px-4 py-3 align-top num', c.align === 'right' && 'text-right', i < fijas && 'fija', fijas && ri < vis.length - 1 && 'border-b border-line')}
+          style=${fija(i, i === 0 && tono && tono(r) ? `inset 3px 0 0 ${borde[tono(r)]}` : null)}>${c.r ? c.r(r) : esc(c.v ? c.v(r) : r[c.k])}</td>`)}
+        ${onRow ? html`<td className=${cx('px-2 py-3 text-faint', fijas && ri < vis.length - 1 && 'border-b border-line')}><${I.ChevronRight} size=${16} aria-hidden="true" /></td>` : null}</tr>`)
       : html`<tr><td colSpan=${ncol}><${Vacio} titulo="Sin resultados" texto=${vacio || (q ? `Nada coincide con «${q}». Prueba con otra palabra o restablece los filtros.` : 'No hay filas que mostrar.')} /></td></tr>`}</tbody>
     </table>
     ${cols.some(c => c.help) ? html`<dl className="grid gap-x-6 gap-y-2 border-t border-line px-4 py-3 text-xs sm:grid-cols-2 lg:grid-cols-4">${cols.filter(c => c.help).map(c => html`<div key=${c.k}><dt className="font-semibold text-ink">${c.label}</dt><dd className="caption mt-0.5">${c.help}</dd></div>`)}</dl>` : null}<//>
@@ -772,6 +928,7 @@ function App(){
   const theme = useTheme(), T = useTokens(theme.efectivo);
   const filtros = useFiltros({periodo: 'total'}), {f} = filtros;
   const [sel, setSel] = useState(null);                 // producto abierto en la hoja de detalle
+  const nav = useNavegacion();                          // ↑ ↓ y anterior / siguiente entre productos, en el orden de la tabla
   const P = D.productos.map((p, i) => ({...p, i}));     // i = orden fijo → color de serie estable
   const vis = P.filter(visible(f)).filter(p => coincide(f.q, p.nombre, D.grupos[p.grupo], ICONOS[p.icono]?.[2]));
   const objetivos = D.objetivos.filter(o => coincide(f.q, o.nombre, o.detalle));
@@ -834,7 +991,7 @@ function App(){
             ${TONO_STOCK(p) ? html`<${Pill} tono=${TONO_STOCK(p)}>Quedan ${p.stock}<//>` : null}<//></button>`; })}<//>`
           : html`<${Card}><${Vacio} titulo="Ningún producto coincide con los filtros" texto="Cambia el canal, el producto o la búsqueda." accion=${html`<button type="button" onClick=${filtros.reset} className="press mt-2 rounded-full px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft">Restablecer filtros</button>`} /><//>`}
         <${SortTable} rows=${P.filter(visible(f))} q=${f.q} texto=${p => [p.nombre, D.grupos[p.grupo], ICONOS[p.icono]?.[2]].join(' ')} rowKey=${p => p.slug} onRow=${p => setSel(p.slug)}
-          tono=${TONO_STOCK} exportar="ventas-por-producto" cols=${[
+          activa=${sel} nav=${nav} tono=${TONO_STOCK} exportar="ventas-por-producto" cols=${[
           {k: 'nombre', label: 'Producto', help: 'Producto y categoría.', r: p => html`<span className="inline-flex items-center gap-2"><${Icono} n=${p.icono} size=${13} /><b className="font-semibold text-strong">${p.nombre}</b></span>`},
           {k: 'grupo', label: 'Canal', help: 'Canal en el que más se vende.', v: p => D.grupos[p.grupo]},
           {k: 'ingresos', label: 'Ingresos', help: 'Ingresos del trimestre, en euros.', align: 'right', r: p => nf(p.ingresos)},
@@ -847,7 +1004,7 @@ function App(){
     </main>
     <${Footer} fuentes=${D.fuentes} fecha=${D.fecha} />
 
-    <${Hoja} abierta=${!!prod} onCerrar=${() => setSel(null)} titulo=${prod?.nombre} sub=${prod && `${ICONOS[prod.icono]?.[2]} · canal ${D.grupos[prod.grupo]}`} icon=${prod?.icono}>
+    <${Hoja} abierta=${!!prod} onCerrar=${() => setSel(null)} nav=${nav} titulo=${prod?.nombre} sub=${prod && `${ICONOS[prod.icono]?.[2]} · canal ${D.grupos[prod.grupo]}`} icon=${prod?.icono}>
       ${prod && html`<${React.Fragment}>
         <div className="flex items-center gap-4"><${Anillo} p=${cumple(prod)} t=${ts(cumple(prod))} size=${72} grosor=${7} />
           <div><div className="cifra text-3xl font-bold text-strong">${eur(prod.ingresos)}</div><div className="text-sm text-muted">de ${eur(prod.objetivo)} de objetivo</div></div></div>

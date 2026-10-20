@@ -9,6 +9,7 @@ function App(){
   const theme = useTheme(), T = useTokens(theme.efectivo);
   const filtros = useFiltros({periodo: 'total'}), {f} = filtros;
   const [sel, setSel] = useState(null);                 // producto abierto en la hoja de detalle
+  const nav = useNavegacion();                          // ↑ ↓ y anterior / siguiente entre productos, en el orden de la tabla
   const P = D.productos.map((p, i) => ({...p, i}));     // i = orden fijo → color de serie estable
   const vis = P.filter(visible(f)).filter(p => coincide(f.q, p.nombre, D.grupos[p.grupo], ICONOS[p.icono]?.[2]));
   const objetivos = D.objetivos.filter(o => coincide(f.q, o.nombre, o.detalle));
@@ -71,7 +72,7 @@ function App(){
             ${TONO_STOCK(p) ? html`<${Pill} tono=${TONO_STOCK(p)}>Quedan ${p.stock}<//>` : null}<//></button>`; })}<//>`
           : html`<${Card}><${Vacio} titulo="Ningún producto coincide con los filtros" texto="Cambia el canal, el producto o la búsqueda." accion=${html`<button type="button" onClick=${filtros.reset} className="press mt-2 rounded-full px-4 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft">Restablecer filtros</button>`} /><//>`}
         <${SortTable} rows=${P.filter(visible(f))} q=${f.q} texto=${p => [p.nombre, D.grupos[p.grupo], ICONOS[p.icono]?.[2]].join(' ')} rowKey=${p => p.slug} onRow=${p => setSel(p.slug)}
-          tono=${TONO_STOCK} exportar="ventas-por-producto" cols=${[
+          activa=${sel} nav=${nav} tono=${TONO_STOCK} exportar="ventas-por-producto" cols=${[
           {k: 'nombre', label: 'Producto', help: 'Producto y categoría.', r: p => html`<span className="inline-flex items-center gap-2"><${Icono} n=${p.icono} size=${13} /><b className="font-semibold text-strong">${p.nombre}</b></span>`},
           {k: 'grupo', label: 'Canal', help: 'Canal en el que más se vende.', v: p => D.grupos[p.grupo]},
           {k: 'ingresos', label: 'Ingresos', help: 'Ingresos del trimestre, en euros.', align: 'right', r: p => nf(p.ingresos)},
@@ -84,7 +85,7 @@ function App(){
     </main>
     <${Footer} fuentes=${D.fuentes} fecha=${D.fecha} />
 
-    <${Hoja} abierta=${!!prod} onCerrar=${() => setSel(null)} titulo=${prod?.nombre} sub=${prod && `${ICONOS[prod.icono]?.[2]} · canal ${D.grupos[prod.grupo]}`} icon=${prod?.icono}>
+    <${Hoja} abierta=${!!prod} onCerrar=${() => setSel(null)} nav=${nav} titulo=${prod?.nombre} sub=${prod && `${ICONOS[prod.icono]?.[2]} · canal ${D.grupos[prod.grupo]}`} icon=${prod?.icono}>
       ${prod && html`<${React.Fragment}>
         <div className="flex items-center gap-4"><${Anillo} p=${cumple(prod)} t=${ts(cumple(prod))} size=${72} grosor=${7} />
           <div><div className="cifra text-3xl font-bold text-strong">${eur(prod.ingresos)}</div><div className="text-sm text-muted">de ${eur(prod.objetivo)} de objetivo</div></div></div>

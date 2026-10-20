@@ -29,6 +29,12 @@
   document.querySelector('table tbody tr').click(); await espera(500);
   const dlg = document.querySelector('[role=dialog]'); ok('abre la hoja de detalle', !!dlg);
   ok('la hoja tiene el foco dentro', dlg && dlg.contains(document.activeElement));
+  // navegación entre detalles (solo si la hoja la tiene: <Hoja nav> + <SortTable activa nav>)
+  const sig = dlg && dlg.querySelector('button[aria-label=Siguiente]');
+  if (sig) { const t0 = dlg.querySelector('h2')?.textContent; window.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true})); await espera(300);
+    const t1 = document.querySelector('[role=dialog] h2')?.textContent; ok('↓ pasa al detalle siguiente (' + t0 + ' → ' + t1 + ')', !!t1 && t1 !== t0);
+    window.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp', bubbles: true})); await espera(300);
+    ok('↑ vuelve al anterior', document.querySelector('[role=dialog] h2')?.textContent === t0); }
   document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})); window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})); await espera(300);
   ok('Esc cierra la hoja', !document.querySelector('[role=dialog]'));
   // tarjeta pulsable (abre su detalle)

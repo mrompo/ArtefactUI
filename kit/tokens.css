@@ -94,8 +94,8 @@ h1,h2,h3{text-wrap:balance} p,dd,li{text-wrap:pretty}
 @keyframes growX{from{transform:scaleX(0)}}
 @keyframes latido{0%,100%{opacity:1}50%{opacity:.35}}
 .reveal.play > *{animation:rise var(--t-entrada) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms)}
-.grow{transform-origin:left}
-.play .grow{animation:growX var(--t-datos) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms + 120ms)}
+.crece{transform-origin:left}
+.play .crece{animation:growX var(--t-datos) var(--spring) both;animation-delay:calc(var(--i,0) * 50ms + 120ms)}
 .latido{animation:latido 2.4s ease-in-out infinite}
 .press{transition:transform var(--t-ui) var(--spring),background-color var(--t-ui),color var(--t-ui)}
 .press:active{transform:scale(.97)}
@@ -105,3 +105,9 @@ h1,h2,h3{text-wrap:balance} p,dd,li{text-wrap:pretty}
 input[type=search]::-webkit-search-cancel-button{display:none}
 @media print{nav,[role=search],.press{display:none!important} body{background:#fff}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+/* Columnas fijas de SortTable (fijas = n): pegadas desde 640 px, con fondo opaco que sigue al hover de la fila */
+td.fija{background:var(--card)}
+tr:hover>td.fija,tr.activa>td.fija{background:linear-gradient(var(--row-hover),var(--row-hover)),var(--card)}
+th.fija{background:linear-gradient(var(--thead),var(--thead)),var(--card)}
+@media (min-width:640px){.fija{position:sticky;z-index:1} th.fija{z-index:2}}
