@@ -56,8 +56,8 @@ claude.ai (tokens con modo oscuro, CDN con versión exacta, ancho de móvil con 
 | Filtros | `useFiltros`, `BarraFiltros`, `Buscador` (atajo «/»), `Desplegable`, `Segmented`, `visible`, `coincide`, `useRecordado` | filtros globales (periodo, grupo, elemento, búsqueda) que se recuerdan en el navegador; `Desplegable` para los filtros propios de una sección |
 | Cifras | `Kpi` (variación, minigráfica, pulsable), `Count`, `Spark`, `Anillo`, `Bar`, `Stack` | KPI y progreso |
 | Gráficas | `ChartCard` (resumen accesible), `Tip`, `ejes(T)`, `useTokens` | Recharts con los tokens del tema |
-| Detalle | `Hoja` (sheet: Esc, fondo, foco atrapado), `Datos` | drill-down al pulsar una fila, tarjeta o KPI |
-| Tablas | `SortTable` (orden, ayuda por columna, búsqueda `q`, `onRow`, `exportar`, `limite`, `vacio`, `fijas` para dejar fijas las primeras columnas en tablas anchas), `BotonExportar`, `toCSV` | detalle tabular y exportación a CSV para Excel |
+| Detalle | `Hoja` (sheet: Esc, fondo, foco atrapado; `nav`: anterior / siguiente y «3 de 12»), `useNavegacion`, `Datos`, `Relacionados` (lo que cita el detalle, con su descripción y un enlace a su propio detalle) | drill-down al pulsar una fila, tarjeta o KPI, y recorrer los detalles sin cerrar la hoja |
+| Tablas | `SortTable` (orden, ayuda por columna, búsqueda `q`, `onRow`, `activa` + `nav` para recorrer los detalles con ↑ ↓, `exportar`, `limite`, `vacio`, `fijas` para dejar fijas las primeras columnas en tablas anchas), `BotonExportar`, `toCSV` | detalle tabular y exportación a CSV para Excel |
 | Color | `Pill`, `SemPill`, `Leyenda`, `IconBadge`, `Avatar`, `escala`, `semaforo`, `semHex`, `SERIES` | estado, escala progresiva, leyendas y avatares |
 | Iconos (Notion) | `ICONOS`, `Icono`, `IconoPagina`, `Etiqueta`, `Callout`, `CatalogoIconos`, `icono()`, `NCOLORES` | catálogo semántico de 117 iconos con colores Notion, ampliable con packs |
 | Lectura | `Guia`, `Resumen`, `Avisos` | cómo leer el informe, conclusiones y avisos de datos |
@@ -67,7 +67,7 @@ claude.ai (tokens con modo oscuro, CDN con versión exacta, ancho de móvil con 
 
 Un dashboard **operativo** tiene, como mínimo: `BarraFiltros` conectada a todas las secciones,
 `Avisos` con `validar` sobre los datos, `Kpi` con conclusión, `Guia`, gráficas con leyenda, filas o
-tarjetas que abren una `Hoja` con el detalle, `SortTable` con búsqueda y `exportar`, y estados
+tarjetas que abren una `Hoja` con el detalle (recorrible con ↑ ↓: `activa` y `nav`), `SortTable` con búsqueda y `exportar`, y estados
 `Vacio` cuando los filtros no dejan nada. `ejemplos/tienda/app.js` lo cumple.
 
 ## Las reglas
@@ -343,6 +343,15 @@ la sostiene. Frases directas y tono natural, en el idioma del usuario.
   `onRow` (abre la `Hoja` de detalle; la fila es accesible con Enter), `exportar="nombre"` (CSV para
   Excel en español, con lo que se ve), `limite` («Mostrar las N restantes») y `vacio` (mensaje sin
   resultados). El contador de filas dice siempre cuántas se ven de cuántas hay.
+- **Tabla con detalle**: si `onRow` abre una `Hoja`, la tabla y la hoja comparten `const nav = useNavegacion()`:
+  `<SortTable onRow activa={clave abierta} nav={nav}>` y `<Hoja nav={nav}>`. La fila abierta se resalta, la
+  hoja pinta anterior / siguiente con la posición («3 de 12») y ↑ ↓ pasan de un detalle a otro en el orden que
+  se ve (búsqueda, filtros y orden por columna incluidos; si la siguiente está tras «Mostrar más», la tabla se
+  despliega). Dentro de un campo de texto las flechas mueven el cursor. Un `nav` por tabla; si dos tablas abren la
+  misma hoja, `activa` solo en la que la abrió.
+- **Lo que el detalle cita** (dependencias, causas, documentos relacionados) va en `<Relacionados items>` con su
+  descripción y estado, no solo con su código: quien lee no tiene que ir a buscarlo a otra sección. Cada elemento
+  puede llevar `abrir` para saltar a su propio detalle.
 
 ### 8. Desglose por elemento (siempre que haya una dimensión)
 

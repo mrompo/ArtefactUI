@@ -108,6 +108,6 @@ input[type=search]::-webkit-search-cancel-button{display:none}
 
 /* Columnas fijas de SortTable (fijas = n): pegadas desde 640 px, con fondo opaco que sigue al hover de la fila */
 td.fija{background:var(--card)}
-tr:hover>td.fija{background:linear-gradient(var(--row-hover),var(--row-hover)),var(--card)}
+tr:hover>td.fija,tr.activa>td.fija{background:linear-gradient(var(--row-hover),var(--row-hover)),var(--card)}
 th.fija{background:linear-gradient(var(--thead),var(--thead)),var(--card)}
 @media (min-width:640px){.fija{position:sticky;z-index:1} th.fija{z-index:2}}

@@ -106,8 +106,8 @@ ficticios), que ya cumple todo lo que se espera de un dashboard operativo.
 | Filtros | `useFiltros`, `BarraFiltros` (grupos y elementos), `Buscador`, `Desplegable`, `Segmented`, `visible`, `coincide`, `useRecordado` |
 | Cifras | `Kpi`, `Count`, `Spark`, `Anillo`, `Bar`, `Stack` |
 | Gráficas | `ChartCard`, `Tip`, `ejes`, `useTokens` (Recharts con los colores del tema) |
-| Detalle | `Hoja`, `Datos` |
-| Tablas | `SortTable`, `BotonExportar`, `toCSV` |
+| Detalle | `Hoja` (con anterior / siguiente), `useNavegacion`, `Datos`, `Relacionados` |
+| Tablas | `SortTable` (con `activa` y `nav`: ↑ ↓ recorren los detalles), `BotonExportar`, `toCSV` |
 | Color | `Pill`, `SemPill`, `Leyenda`, `IconBadge`, `Avatar`, `escala`, `semaforo`, `SERIES` |
 | Iconos | `ICONOS`, `Icono`, `IconoPagina`, `Etiqueta`, `Callout`, `CatalogoIconos` |
 | Lectura | `Guia`, `Resumen`, `Avisos` |
