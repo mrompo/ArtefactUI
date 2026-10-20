@@ -2,6 +2,16 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+- Corregido: la animación de las barras se llamaba `.grow`, igual que la utilidad de Tailwind `grow` (`flex-grow: 1`); dentro de un contenedor flex estiraba los segmentos y falseaba los porcentajes. Ahora es `.crece`, y `montar.py` avisa si se usa `grow` en `className`.
+- `Campo`: campo editable (número con coma o punto, texto o nota) con unidad, ayuda y vuelta al valor de partida.
+- `useCompartido(ruta, inicial)`: estado guardado en la base de datos del artifact (capacidad `db`), agrupando ráfagas y con estado visible (compartido, local, solo lectura, guardando).
+- `SortTable` acepta `fijas`: deja fijas las primeras columnas al desplazar en horizontal (desde 640 px), con fondo opaco que sigue al hover.
+- `Guia` acepta `abierta={false}` para arrancar cerrada.
+- `Desplegable`: menú de filtro propio (no `<select>`, cuyo menú nativo sale vacío o sin contraste dentro del visor de artifacts), con opción «todos», teclado y cierre al pulsar fuera. Lo usa la `BarraFiltros` y sirve para filtros propios de una sección.
+- `Header` acepta `barra`: controles propios en la barra superior, junto al título (navegación entre páginas, selector de elemento).
+
 ## [1.0.0] · 2026-10-11
 
 Primera versión pública.

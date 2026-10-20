@@ -122,6 +122,9 @@ def main():
     trampas = re.findall(r"(?<!\$)\{'<[A-Za-z][^']*'\}", app)
     if trampas:
         errores.append("htm interpreta como etiqueta el texto entre {'…'}; usa ${'…'}: " + ', '.join(trampas[:3]))
+    # `grow` de Tailwind es flex-grow:1: en una barra flexible estira el segmento y falsea el porcentaje (la animación es `crece`)
+    if re.search(r'className=["`][^"`]*(?<![\w-])grow(?![\w-])', app):
+        avisos.append('«grow» en className estira el elemento en un contenedor flex (flex-grow:1); para que la barra crezca al entrar usa «crece»')
     # Colores sueltos en app.js (todo color debe ser un token var(--…))
     hexes = sorted(set(re.findall(r'#[0-9A-Fa-f]{6}\b', app)))
     if hexes:

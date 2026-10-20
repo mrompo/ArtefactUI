@@ -103,7 +103,7 @@ ficticios), que ya cumple todo lo que se espera de un dashboard operativo.
 | Grupo | Componentes |
 |---|---|
 | Página | `Header`, `Footer`, `Section`, `Card`, `Grouped`, `Reveal` |
-| Filtros | `useFiltros`, `BarraFiltros` (grupos y elementos), `Buscador`, `Segmented`, `visible`, `coincide`, `useRecordado` |
+| Filtros | `useFiltros`, `BarraFiltros` (grupos y elementos), `Buscador`, `Desplegable`, `Segmented`, `visible`, `coincide`, `useRecordado` |
 | Cifras | `Kpi`, `Count`, `Spark`, `Anillo`, `Bar`, `Stack` |
 | Gráficas | `ChartCard`, `Tip`, `ejes`, `useTokens` (Recharts con los colores del tema) |
 | Detalle | `Hoja`, `Datos` |
@@ -112,6 +112,7 @@ ficticios), que ya cumple todo lo que se espera de un dashboard operativo.
 | Iconos | `ICONOS`, `Icono`, `IconoPagina`, `Etiqueta`, `Callout`, `CatalogoIconos` |
 | Lectura | `Guia`, `Resumen`, `Avisos` |
 | Estados | `Vacio`, `Esqueleto`, `Protegido`, `validar`, `toast` |
+| Edición | `Campo`, `useCompartido` |
 | Tema | `useTheme`, `ThemeToggle` |
 
 La referencia completa, con las reglas de diseño, está en

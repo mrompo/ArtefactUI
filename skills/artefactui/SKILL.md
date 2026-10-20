@@ -52,16 +52,17 @@ claude.ai (tokens con modo oscuro, CDN con versión exacta, ancho de móvil con 
 
 | Grupo | Componente | Para qué |
 |---|---|---|
-| Página | `Header`, `Footer` (incluye `Toasts`), `Section` (icono, leyenda y aislamiento de errores), `Card`, `Grouped`, `Reveal` | estructura, barra con material, secciones con conclusión |
-| Filtros | `useFiltros`, `BarraFiltros`, `Buscador` (atajo «/»), `Segmented`, `visible`, `coincide`, `useRecordado` | filtros globales (periodo, grupo, elemento, búsqueda) que se recuerdan en el navegador |
+| Página | `Header` (`barra`: controles propios en la barra superior, p. ej. navegación entre páginas), `Footer` (incluye `Toasts`), `Section` (icono, leyenda y aislamiento de errores), `Card`, `Grouped`, `Reveal` | estructura, barra con material, secciones con conclusión |
+| Filtros | `useFiltros`, `BarraFiltros`, `Buscador` (atajo «/»), `Desplegable`, `Segmented`, `visible`, `coincide`, `useRecordado` | filtros globales (periodo, grupo, elemento, búsqueda) que se recuerdan en el navegador; `Desplegable` para los filtros propios de una sección |
 | Cifras | `Kpi` (variación, minigráfica, pulsable), `Count`, `Spark`, `Anillo`, `Bar`, `Stack` | KPI y progreso |
 | Gráficas | `ChartCard` (resumen accesible), `Tip`, `ejes(T)`, `useTokens` | Recharts con los tokens del tema |
 | Detalle | `Hoja` (sheet: Esc, fondo, foco atrapado), `Datos` | drill-down al pulsar una fila, tarjeta o KPI |
-| Tablas | `SortTable` (orden, ayuda por columna, búsqueda `q`, `onRow`, `exportar`, `limite`, `vacio`), `BotonExportar`, `toCSV` | detalle tabular y exportación a CSV para Excel |
+| Tablas | `SortTable` (orden, ayuda por columna, búsqueda `q`, `onRow`, `exportar`, `limite`, `vacio`, `fijas` para dejar fijas las primeras columnas en tablas anchas), `BotonExportar`, `toCSV` | detalle tabular y exportación a CSV para Excel |
 | Color | `Pill`, `SemPill`, `Leyenda`, `IconBadge`, `Avatar`, `escala`, `semaforo`, `semHex`, `SERIES` | estado, escala progresiva, leyendas y avatares |
 | Iconos (Notion) | `ICONOS`, `Icono`, `IconoPagina`, `Etiqueta`, `Callout`, `CatalogoIconos`, `icono()`, `NCOLORES` | catálogo semántico de 117 iconos con colores Notion, ampliable con packs |
 | Lectura | `Guia`, `Resumen`, `Avisos` | cómo leer el informe, conclusiones y avisos de datos |
 | Estados | `Vacio`, `Esqueleto`, `Protegido`, `validar`, `toast` | vacío, carga, error de sección, calidad de datos, avisos breves |
+| Edición | `Campo` (número, texto o nota, con unidad y vuelta al valor de partida), `useCompartido` (estado en la BBDD del artifact: `capabilities: {db: {}, user: {}}`) | simuladores, escenarios y respuestas que se guardan y lee Claude |
 | Tema | `useTheme`, `ThemeToggle` | oscuro por defecto → claro → automático |
 
 Un dashboard **operativo** tiene, como mínimo: `BarraFiltros` conectada a todas las secciones,
@@ -374,7 +375,7 @@ se repiten mucho.
 Ya incluido en la plantilla:
 
 - `<Count>`: los KPI suben desde 0 en 800 ms.
-- `<Reveal>` y `<Grouped>`: entrada escalonada al entrar en pantalla, y barras (`.grow`) que crecen.
+- `<Reveal>` y `<Grouped>`: entrada escalonada al entrar en pantalla, y barras (`.crece`) que crecen; no uses `grow` de Tailwind para eso, que estira el elemento en un contenedor flex.
   Sin `.play`, todo está en su estado final.
 - `<Segmented>`: el indicador se desliza al elegir; `.press`: los botones ceden un 3 % al pulsar.
 - Recharts anima al montarse (`animationDuration=${700}`, `isAnimationActive=${!RM}`); al cambiar
